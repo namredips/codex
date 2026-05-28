@@ -91,6 +91,14 @@ fn trim_trailing_blank_lines(mut lines: Vec<Line<'static>>) -> Vec<Line<'static>
     lines
 }
 
+fn apply_primary_text_style(mut lines: Vec<HyperlinkLine>) -> Vec<HyperlinkLine> {
+    let style = primary_text_style();
+    for line in &mut lines {
+        line.line.style = line.line.style.patch(style);
+    }
+    lines
+}
+
 impl HistoryCell for UserHistoryCell {
     fn display_lines(&self, width: u16) -> Vec<Line<'static>> {
         let wrap_width = width
@@ -167,7 +175,7 @@ impl HistoryCell for UserHistoryCell {
         if let Some(wrapped_message) = wrapped_message {
             lines.extend(prefix_lines(
                 wrapped_message,
-                "› ".bold().dim(),
+                Span::styled("› ", muted_style().add_modifier(Modifier::BOLD)),
                 "  ".into(),
             ));
         }
@@ -222,7 +230,7 @@ impl ReasoningSummaryCell {
             Some(self.cwd.as_path()),
             &mut lines,
         );
-        let summary_style = Style::default().dim().italic();
+        let summary_style = muted_style().italic();
         let summary_lines = lines
             .into_iter()
             .map(|mut line| {
@@ -238,7 +246,7 @@ impl ReasoningSummaryCell {
         adaptive_wrap_lines(
             &summary_lines,
             RtOptions::new(width as usize)
-                .initial_indent("• ".dim().into())
+                .initial_indent(Span::styled("• ", muted_style()).into())
                 .subsequent_indent("  ".into()),
         )
     }
@@ -298,7 +306,7 @@ impl HistoryCell for AgentMessageCell {
         let mut wrapped = Vec::new();
         for (index, line) in self.lines.iter().enumerate() {
             let initial_indent = if index == 0 && self.is_first_line {
-                "• ".dim().into()
+                Span::styled("• ", muted_style()).into()
             } else {
                 "  ".into()
             };
@@ -313,7 +321,7 @@ impl HistoryCell for AgentMessageCell {
                     .subsequent_indent(subsequent_indent),
             ));
         }
-        wrapped
+        apply_primary_text_style(wrapped)
     }
 
     fn transcript_hyperlink_lines(&self, width: u16) -> Vec<HyperlinkLine> {
@@ -370,8 +378,8 @@ impl HistoryCell for AgentMarkdownCell {
             crate::width::usable_content_width_u16(width, /*reserved_cols*/ 2)
         else {
             return prefix_hyperlink_lines(
-                vec![HyperlinkLine::new(Line::default())],
-                "• ".dim(),
+                apply_primary_text_style(vec![HyperlinkLine::new(Line::default())]),
+                Span::styled("• ", muted_style()),
                 "  ".into(),
             );
         };
@@ -383,7 +391,11 @@ impl HistoryCell for AgentMarkdownCell {
             Some(wrap_width),
             Some(self.cwd.as_path()),
         );
-        prefix_hyperlink_lines(lines, "• ".dim(), "  ".into())
+        prefix_hyperlink_lines(
+            apply_primary_text_style(lines),
+            Span::styled("• ", muted_style()),
+            "  ".into(),
+        )
     }
 
     fn transcript_hyperlink_lines(&self, width: u16) -> Vec<HyperlinkLine> {
@@ -424,9 +436,9 @@ impl HistoryCell for StreamingAgentTailCell {
         // Tail lines are already rendered at the controller's current stream width.
         // Re-wrapping them here can split table borders and produce malformed in-flight rows.
         prefix_hyperlink_lines(
-            self.lines.clone(),
+            apply_primary_text_style(self.lines.clone()),
             if self.is_first_line {
-                "• ".dim()
+                Span::styled("• ", muted_style())
             } else {
                 "  ".into()
             },

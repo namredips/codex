@@ -2731,6 +2731,127 @@
       ],
       "type": "string"
     },
+    "TuiColor": {
+      "type": "string"
+    },
+    "TuiColors": {
+      "additionalProperties": false,
+      "properties": {
+        "accent": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "border": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "composer_bg": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "error": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "foreground": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "muted": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "proposed_plan_bg": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "selection_bg": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "selection_fg": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "separator": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "status": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "success": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "user_message_bg": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "warning": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
     "Tui": {
       "additionalProperties": false,
       "description": "Collection of settings that are specific to the TUI.",
@@ -2748,6 +2869,15 @@
           "default": true,
           "description": "Enable animations (welcome screen, shimmer effects, spinners). Defaults to `true`.",
           "type": "boolean"
+        },
+        "colors": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColors"
+            }
+          ],
+          "default": {},
+          "description": "Optional semantic colors for non-syntax TUI surfaces."
         },
         "keymap": {
           "allOf": [

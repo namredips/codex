@@ -28,13 +28,16 @@ impl HistoryCell for UnifiedExecInteractionCell {
         let mut header_spans = if waited_only {
             vec!["• Waited for background terminal".bold()]
         } else {
-            vec!["↳ ".dim(), "Interacted with background terminal".bold()]
+            vec![
+                Span::styled("↳ ", muted_style()),
+                "Interacted with background terminal".bold(),
+            ]
         };
         if let Some(command) = &self.command_display
             && !command.is_empty()
         {
-            header_spans.push(" · ".dim());
-            header_spans.push(command.clone().dim());
+            header_spans.push(Span::styled(" · ", muted_style()));
+            header_spans.push(Span::styled(command.clone(), muted_style()));
         }
         let header = Line::from(header_spans);
 
@@ -55,8 +58,8 @@ impl HistoryCell for UnifiedExecInteractionCell {
         let input_wrapped = adaptive_wrap_lines(
             input_lines,
             RtOptions::new(wrap_width)
-                .initial_indent(Line::from("  └ ".dim()))
-                .subsequent_indent(Line::from("    ".dim())),
+                .initial_indent(Line::from(Span::styled("  └ ", muted_style())))
+                .subsequent_indent(Line::from(Span::styled("    ", muted_style()))),
         );
         out.extend(input_wrapped);
         out
@@ -160,7 +163,7 @@ impl HistoryCell for UnifiedExecProcessesCell {
                 }
             };
             if wrap_width <= prefix_width {
-                out.push(Line::from(prefix.dim()));
+                out.push(Line::from(Span::styled(prefix, muted_style())));
                 shown += 1;
                 continue;
             }
@@ -175,10 +178,17 @@ impl HistoryCell for UnifiedExecProcessesCell {
             if needs_suffix && budget > truncation_suffix_width {
                 let available = budget.saturating_sub(truncation_suffix_width);
                 let (truncated, _, _) = take_prefix_by_width(&snippet, available);
-                out.push(vec![prefix.dim(), truncated.cyan(), truncation_suffix.dim()].into());
+                out.push(
+                    vec![
+                        Span::styled(prefix, muted_style()),
+                        truncated.cyan(),
+                        Span::styled(truncation_suffix, muted_style()),
+                    ]
+                    .into(),
+                );
             } else {
                 let (truncated, _, _) = take_prefix_by_width(&snippet, budget);
-                out.push(vec![prefix.dim(), truncated.cyan()].into());
+                out.push(vec![Span::styled(prefix, muted_style()), truncated.cyan()].into());
             }
 
             let chunk_prefix_first = "    ↳ ";
@@ -191,7 +201,7 @@ impl HistoryCell for UnifiedExecProcessesCell {
                 };
                 let chunk_prefix_width = UnicodeWidthStr::width(chunk_prefix);
                 if wrap_width <= chunk_prefix_width {
-                    out.push(Line::from(chunk_prefix.dim()));
+                    out.push(Line::from(Span::styled(chunk_prefix, muted_style())));
                     continue;
                 }
                 let budget = wrap_width.saturating_sub(chunk_prefix_width);
@@ -200,10 +210,21 @@ impl HistoryCell for UnifiedExecProcessesCell {
                     let available = budget.saturating_sub(truncation_suffix_width);
                     let (shorter, _, _) = take_prefix_by_width(chunk, available);
                     out.push(
-                        vec![chunk_prefix.dim(), shorter.dim(), truncation_suffix.dim()].into(),
+                        vec![
+                            Span::styled(chunk_prefix, muted_style()),
+                            Span::styled(shorter, muted_style()),
+                            Span::styled(truncation_suffix, muted_style()),
+                        ]
+                        .into(),
                     );
                 } else {
-                    out.push(vec![chunk_prefix.dim(), truncated.dim()].into());
+                    out.push(
+                        vec![
+                            Span::styled(chunk_prefix, muted_style()),
+                            Span::styled(truncated, muted_style()),
+                        ]
+                        .into(),
+                    );
                 }
             }
             shown += 1;
@@ -213,11 +234,17 @@ impl HistoryCell for UnifiedExecProcessesCell {
         if remaining > 0 {
             let more_text = format!("... and {remaining} more running");
             if wrap_width <= prefix_width {
-                out.push(Line::from(prefix.dim()));
+                out.push(Line::from(Span::styled(prefix, muted_style())));
             } else {
                 let budget = wrap_width.saturating_sub(prefix_width);
                 let (truncated, _, _) = take_prefix_by_width(&more_text, budget);
-                out.push(vec![prefix.dim(), truncated.dim()].into());
+                out.push(
+                    vec![
+                        Span::styled(prefix, muted_style()),
+                        Span::styled(truncated, muted_style()),
+                    ]
+                    .into(),
+                );
             }
         }
 

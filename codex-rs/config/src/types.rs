@@ -11,6 +11,8 @@ pub use crate::mcp_types::McpServerOAuthConfig;
 pub use crate::mcp_types::McpServerToolConfig;
 pub use crate::mcp_types::McpServerTransportConfig;
 pub use crate::mcp_types::RawMcpServerConfig;
+pub use crate::tui_colors::TuiColor;
+pub use crate::tui_colors::TuiColors;
 pub use codex_protocol::config_types::AltScreenMode;
 pub use codex_protocol::config_types::ApprovalsReviewer;
 use codex_protocol::config_types::EnvironmentVariablePattern;
@@ -691,6 +693,10 @@ pub struct Tui {
     /// Defaults to `true`.
     #[serde(default = "default_true")]
     pub status_line_use_colors: bool,
+
+    /// Optional semantic colors for non-syntax TUI surfaces.
+    #[serde(default)]
+    pub colors: TuiColors,
 
     /// Ordered list of terminal title item identifiers.
     ///

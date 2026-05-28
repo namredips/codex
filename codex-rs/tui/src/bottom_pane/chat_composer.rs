@@ -152,7 +152,6 @@ use ratatui::text::Line;
 use ratatui::text::Span;
 use ratatui::widgets::Block;
 use ratatui::widgets::Paragraph;
-use ratatui::widgets::StatefulWidgetRef;
 use ratatui::widgets::WidgetRef;
 
 use super::chat_composer_history::ChatComposerHistory;
@@ -205,7 +204,9 @@ use crate::render::Insets;
 use crate::render::RectExt;
 use crate::render::renderable::Renderable;
 use crate::slash_command::SlashCommand;
-use crate::style::user_message_style;
+use crate::style::composer_style;
+use crate::style::composer_text_style;
+use crate::style::muted_style;
 use codex_protocol::ThreadId;
 use codex_protocol::user_input::ByteRange;
 use codex_protocol::user_input::MAX_USER_INPUT_TEXT_CHARS;
@@ -1093,7 +1094,7 @@ impl ChatComposer {
             show_cycle_hint,
         ) {
             if !spans.is_empty() {
-                spans.push(" | ".dim());
+                spans.push(Span::styled(" | ", muted_style()));
             }
             spans.extend(indicators.spans);
         }
@@ -1110,7 +1111,7 @@ impl ChatComposer {
             self.footer.context_window_used_tokens,
         );
         if let Some(vim_mode) = self.vim_mode_indicator_span() {
-            line.spans.push(" | ".dim());
+            line.spans.push(Span::styled(" | ", muted_style()));
             line.spans.push(vim_mode);
         }
         line
@@ -4375,7 +4376,7 @@ impl ChatComposer {
                 }
             }
         }
-        let style = user_message_style();
+        let style = composer_style();
         Block::default().style(style).render_ref(composer_rect, buf);
         if !remote_images_rect.is_empty() {
             Paragraph::new(self.attachments.remote_image_lines())
@@ -4387,10 +4388,10 @@ impl ChatComposer {
                 if self.draft.is_bash_mode {
                     Span::from("!").light_red().bold()
                 } else {
-                    "›".bold()
+                    Span::styled("›", composer_text_style().add_modifier(Modifier::BOLD))
                 }
             } else {
-                "›".dim()
+                Span::styled("›", muted_style())
             };
             buf.set_span(
                 textarea_rect.x - LIVE_PREFIX_COLS,
@@ -4416,22 +4417,13 @@ impl ChatComposer {
                         .into_iter()
                         .map(|range| (range, search_highlight_style)),
                 );
-                if highlights.is_empty() {
-                    StatefulWidgetRef::render_ref(
-                        &(&self.draft.textarea),
-                        textarea_rect,
-                        buf,
-                        &mut state,
-                    );
-                } else {
-                    self.draft.textarea.render_ref_styled_with_highlights(
-                        textarea_rect,
-                        buf,
-                        &mut state,
-                        Style::default(),
-                        &highlights,
-                    );
-                }
+                self.draft.textarea.render_ref_styled_with_highlights(
+                    textarea_rect,
+                    buf,
+                    &mut state,
+                    composer_text_style(),
+                    &highlights,
+                );
             }
         }
         if !self.draft.input_enabled || textarea_is_empty {
@@ -4445,7 +4437,7 @@ impl ChatComposer {
                     .to_string()
             };
             if !textarea_rect.is_empty() {
-                let placeholder = Span::from(text).dim();
+                let placeholder = Span::styled(text, muted_style());
                 Line::from(vec![placeholder])
                     .render_ref(textarea_rect.inner(Margin::new(0, 0)), buf);
             }

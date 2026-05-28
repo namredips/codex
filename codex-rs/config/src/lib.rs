@@ -23,6 +23,7 @@ mod skills_config;
 mod state;
 mod strict_config;
 mod thread_config;
+mod tui_colors;
 mod tui_keymap;
 pub mod types;
 

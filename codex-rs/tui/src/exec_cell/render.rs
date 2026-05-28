@@ -12,6 +12,10 @@ use crate::motion::activity_indicator;
 use crate::render::highlight::highlight_bash_to_lines;
 use crate::render::line_utils::prefix_lines;
 use crate::render::line_utils::push_owned_lines;
+use crate::style::error_style;
+use crate::style::metadata_style;
+use crate::style::muted_style;
+use crate::style::success_style;
 use crate::wrapping::RtOptions;
 use crate::wrapping::adaptive_wrap_line;
 use crate::wrapping::adaptive_wrap_lines;
@@ -145,7 +149,7 @@ pub(crate) fn output_lines(
         };
         line.spans.insert(0, prefix.into());
         line.spans.iter_mut().for_each(|span| {
-            span.style = span.style.add_modifier(Modifier::DIM);
+            span.style = span.style.patch(muted_style());
         });
         out.push(line);
     }
@@ -172,7 +176,7 @@ pub(crate) fn output_lines(
             line.spans.insert(0, "    ".into());
         }
         line.spans.iter_mut().for_each(|span| {
-            span.style = span.style.add_modifier(Modifier::DIM);
+            span.style = span.style.patch(muted_style());
         });
         out.push(line);
     }
@@ -189,7 +193,7 @@ fn activity_marker(start_time: Option<Instant>, animations_enabled: bool) -> Spa
         MotionMode::from_animations_enabled(animations_enabled),
         ReducedMotionIndicator::StaticBullet,
     )
-    .unwrap_or_else(|| "•".dim())
+    .unwrap_or_else(|| Span::styled("•", muted_style()))
 }
 
 impl HistoryCell for ExecCell {
@@ -231,14 +235,17 @@ impl HistoryCell for ExecCell {
                     .map(format_duration)
                     .unwrap_or_else(|| "unknown".to_string());
                 let mut result: Line = if output.exit_code == 0 {
-                    Line::from("✓".green().bold())
+                    Line::from(Span::styled(
+                        "✓",
+                        success_style().add_modifier(Modifier::BOLD),
+                    ))
                 } else {
                     Line::from(vec![
-                        "✗".red().bold(),
+                        Span::styled("✗", error_style().add_modifier(Modifier::BOLD)),
                         format!(" ({})", output.exit_code).into(),
                     ])
                 };
-                result.push_span(format!(" • {duration}").dim());
+                result.push_span(Span::styled(format!(" • {duration}"), muted_style()));
                 lines.push(result);
             }
         }
@@ -256,7 +263,10 @@ impl ExecCell {
     }
 
     fn output_ellipsis_line(omitted: usize) -> Line<'static> {
-        Line::from(vec![Self::output_ellipsis_text(omitted).dim()])
+        Line::from(vec![Span::styled(
+            Self::output_ellipsis_text(omitted),
+            muted_style(),
+        )])
     }
 
     fn exploring_display_lines(&self, width: u16) -> Vec<Line<'static>> {
@@ -265,7 +275,7 @@ impl ExecCell {
             if self.is_active() {
                 activity_marker(self.active_start_time(), self.animations_enabled())
             } else {
-                "•".dim()
+                Span::styled("•", muted_style())
             },
             " ".into(),
             if self.is_active() {
@@ -311,33 +321,46 @@ impl ExecCell {
                         ParsedCommand::Read { name, .. } => name.clone(),
                         _ => unreachable!(),
                     })
-                    .unique();
+                    .unique()
+                    .map(|name| Span::styled(name, metadata_style()));
                 vec![(
                     "Read",
-                    Itertools::intersperse(names.into_iter().map(Into::into), ", ".dim()).collect(),
+                    Itertools::intersperse(
+                        names,
+                        Span::styled(", ", muted_style()),
+                    )
+                    .collect(),
                 )]
             } else {
                 let mut lines = Vec::new();
                 for parsed in &call.parsed {
                     match parsed {
                         ParsedCommand::Read { name, .. } => {
-                            lines.push(("Read", vec![name.clone().into()]));
+                            lines.push(("Read", vec![Span::styled(name.clone(), metadata_style())]));
                         }
                         ParsedCommand::ListFiles { cmd, path } => {
-                            lines.push(("List", vec![path.clone().unwrap_or(cmd.clone()).into()]));
+                            lines.push((
+                                "List",
+                                vec![Span::styled(
+                                    path.clone().unwrap_or(cmd.clone()),
+                                    metadata_style(),
+                                )],
+                            ));
                         }
                         ParsedCommand::Search { cmd, query, path } => {
                             let spans = match (query, path) {
-                                (Some(q), Some(p)) => {
-                                    vec![q.clone().into(), " in ".dim(), p.clone().into()]
-                                }
-                                (Some(q), None) => vec![q.clone().into()],
-                                _ => vec![cmd.clone().into()],
+                                (Some(q), Some(p)) => vec![
+                                    Span::styled(q.clone(), metadata_style()),
+                                    Span::styled(" in ", muted_style()),
+                                    Span::styled(p.clone(), metadata_style()),
+                                ],
+                                (Some(q), None) => vec![Span::styled(q.clone(), metadata_style())],
+                                _ => vec![Span::styled(cmd.clone(), metadata_style())],
                             };
                             lines.push(("Search", spans));
                         }
                         ParsedCommand::Unknown { cmd } => {
-                            lines.push(("Run", vec![cmd.clone().into()]));
+                            lines.push(("Run", vec![Span::styled(cmd.clone(), metadata_style())]));
                         }
                     }
                 }
@@ -358,7 +381,11 @@ impl ExecCell {
             }
         }
 
-        out.extend(prefix_lines(out_indented, "  └ ".dim(), "    ".into()));
+        out.extend(prefix_lines(
+            out_indented,
+            Span::styled("  └ ", muted_style()),
+            "    ".into(),
+        ));
         out
     }
 
@@ -369,8 +396,8 @@ impl ExecCell {
         let layout = EXEC_DISPLAY_LAYOUT;
         let success = call.output.as_ref().map(|o| o.exit_code == 0);
         let bullet = match success {
-            Some(true) => "•".green().bold(),
-            Some(false) => "•".red().bold(),
+            Some(true) => Span::styled("•", success_style().add_modifier(Modifier::BOLD)),
+            Some(false) => Span::styled("•", error_style().add_modifier(Modifier::BOLD)),
             None => activity_marker(call.start_time, self.animations_enabled()),
         };
         let is_interaction = call.is_unified_exec_interaction();
@@ -434,8 +461,8 @@ impl ExecCell {
         if !continuation_lines.is_empty() {
             lines.extend(prefix_lines(
                 continuation_lines,
-                Span::from(layout.command_continuation.initial_prefix).dim(),
-                Span::from(layout.command_continuation.subsequent_prefix).dim(),
+                Span::styled(layout.command_continuation.initial_prefix, muted_style()),
+                Span::styled(layout.command_continuation.subsequent_prefix, muted_style()),
             ));
         }
 
@@ -463,8 +490,8 @@ impl ExecCell {
             if raw_output.lines.is_empty() {
                 if !call.is_unified_exec_interaction() {
                     lines.extend(prefix_lines(
-                        vec![Line::from("(no output)".dim())],
-                        Span::from(layout.output_block.initial_prefix).dim(),
+                        vec![Line::from(Span::styled("(no output)", muted_style()))],
+                        Span::styled(layout.output_block.initial_prefix, muted_style()),
                         Span::from(layout.output_block.subsequent_prefix),
                     ));
                 }
@@ -485,7 +512,7 @@ impl ExecCell {
 
                 let prefixed_output = prefix_lines(
                     wrapped_output,
-                    Span::from(layout.output_block.initial_prefix).dim(),
+                    Span::styled(layout.output_block.initial_prefix, muted_style()),
                     Span::from(layout.output_block.subsequent_prefix),
                 );
                 let trimmed_output = Self::truncate_lines_middle(
@@ -493,9 +520,10 @@ impl ExecCell {
                     display_limit,
                     width,
                     raw_output.omitted,
-                    Some(Line::from(
-                        Span::from(layout.output_block.subsequent_prefix).dim(),
-                    )),
+                    Some(Line::from(Span::styled(
+                        layout.output_block.subsequent_prefix,
+                        muted_style(),
+                    ))),
                 );
 
                 if !trimmed_output.is_empty() {
@@ -630,7 +658,10 @@ impl ExecCell {
     }
 
     fn ellipsis_line(omitted: usize) -> Line<'static> {
-        Line::from(vec![format!("… +{omitted} lines").dim()])
+        Line::from(vec![Span::styled(
+            format!("… +{omitted} lines"),
+            muted_style(),
+        )])
     }
 
     fn output_ellipsis_row_count(
@@ -653,7 +684,10 @@ impl ExecCell {
         prefix: Option<&Line<'static>>,
     ) -> Line<'static> {
         let mut line = prefix.cloned().unwrap_or_default();
-        line.push_span(Self::output_ellipsis_text(omitted).dim());
+        line.push_span(Span::styled(
+            Self::output_ellipsis_text(omitted),
+            muted_style(),
+        ));
         line
     }
 }
@@ -763,7 +797,7 @@ mod tests {
         }
         let full_prefixed_output = prefix_lines(
             full_wrapped_output,
-            Span::from(layout.output_block.initial_prefix).dim(),
+            Span::styled(layout.output_block.initial_prefix, muted_style()),
             Span::from(layout.output_block.subsequent_prefix),
         );
         let full_screen_lines = Paragraph::new(Text::from(full_prefixed_output))
@@ -845,7 +879,7 @@ mod tests {
             /*max_rows*/ 2,
             /*width*/ 80,
             Some(4),
-            Some(Line::from("    ".dim())),
+            Some(Line::from(Span::styled("    ", muted_style()))),
         );
         let rendered: Vec<String> = truncated.iter().map(render_line_text).collect();
 

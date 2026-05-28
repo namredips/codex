@@ -1692,6 +1692,7 @@ async fn run_ratatui_app(
     ) {
         config.startup_warnings.push(w);
     }
+    crate::style::set_tui_colors(config.tui_colors.clone());
 
     set_default_client_residency_requirement(config.enforce_residency.value());
     let should_show_trust_screen = should_show_trust_screen(&config);

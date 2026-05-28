@@ -48,7 +48,12 @@ fn with_border_internal(
 
     let mut out = Vec::with_capacity(lines.len() + 2);
     let border_inner_width = content_width + 2;
-    out.push(vec![format!("╭{}╮", "─".repeat(border_inner_width)).dim()].into());
+    let border = border_style();
+    out.push(vec![Span::styled(
+        format!("╭{}╮", "─".repeat(border_inner_width)),
+        border,
+    )]
+    .into());
 
     for line in lines.into_iter() {
         let used_width: usize = line
@@ -57,16 +62,20 @@ fn with_border_internal(
             .sum();
         let span_count = line.spans.len();
         let mut spans: Vec<Span<'static>> = Vec::with_capacity(span_count + 4);
-        spans.push(Span::from("│ ").dim());
+        spans.push(Span::styled("│ ", border));
         spans.extend(line);
         if used_width < content_width {
-            spans.push(Span::from(" ".repeat(content_width - used_width)).dim());
+            spans.push(Span::styled(" ".repeat(content_width - used_width), border));
         }
-        spans.push(Span::from(" │").dim());
+        spans.push(Span::styled(" │", border));
         out.push(Line::from(spans));
     }
 
-    out.push(vec![format!("╰{}╯", "─".repeat(border_inner_width)).dim()].into());
+    out.push(vec![Span::styled(
+        format!("╰{}╯", "─".repeat(border_inner_width)),
+        border,
+    )]
+    .into());
 
     out
 }
@@ -162,35 +171,38 @@ pub(crate) fn new_session_info(
 
     if is_first_event {
         // Help lines below the header (new copy and list)
+        let muted = muted_style();
         let help_lines: Vec<Line<'static>> = vec![
-            "  To get started, describe a task or try one of these commands:"
-                .dim()
-                .into(),
+            Span::styled(
+                "  To get started, describe a task or try one of these commands:",
+                muted,
+            )
+            .into(),
             Line::from(""),
             Line::from(vec![
                 "  ".into(),
                 "/init".into(),
-                " - create an AGENTS.md file with instructions for Codex".dim(),
+                Span::styled(" - create an AGENTS.md file with instructions for Codex", muted),
             ]),
             Line::from(vec![
                 "  ".into(),
                 "/status".into(),
-                " - show current session configuration".dim(),
+                Span::styled(" - show current session configuration", muted),
             ]),
             Line::from(vec![
                 "  ".into(),
                 "/permissions".into(),
-                " - choose what Codex is allowed to do".dim(),
+                Span::styled(" - choose what Codex is allowed to do", muted),
             ]),
             Line::from(vec![
                 "  ".into(),
                 "/model".into(),
-                " - choose what model and reasoning effort to use".dim(),
+                Span::styled(" - choose what model and reasoning effort to use", muted),
             ]),
             Line::from(vec![
                 "  ".into(),
                 "/review".into(),
-                " - review any changes and find issues".dim(),
+                Span::styled(" - review any changes and find issues", muted),
             ]),
         ];
 
@@ -338,11 +350,12 @@ impl HistoryCell for SessionHeaderHistoryCell {
         let make_row = |spans: Vec<Span<'static>>| Line::from(spans);
 
         // Title line rendered inside the box: ">_ OpenAI Codex (vX)"
+        let muted = muted_style();
         let title_spans: Vec<Span<'static>> = vec![
-            Span::from(">_ ").dim(),
+            Span::styled(">_ ", muted),
             Span::from("OpenAI Codex").bold(),
-            Span::from(" ").dim(),
-            Span::from(format!("(v{})", self.version)).dim(),
+            Span::styled(" ", muted),
+            Span::styled(format!("(v{})", self.version), muted),
         ];
 
         const CHANGE_MODEL_HINT_COMMAND: &str = "/model";
@@ -363,7 +376,7 @@ impl HistoryCell for SessionHeaderHistoryCell {
         let reasoning_label = self.reasoning_label();
         let model_spans: Vec<Span<'static>> = {
             let mut spans = vec![
-                Span::from(format!("{model_label} ")).dim(),
+                Span::styled(format!("{model_label} "), muted),
                 Span::styled(self.model.clone(), self.model_style),
             ];
             if let Some(reasoning) = reasoning_label {
@@ -374,9 +387,9 @@ impl HistoryCell for SessionHeaderHistoryCell {
                 spans.push("   ".into());
                 spans.push(Span::styled("fast", self.model_style.magenta()));
             }
-            spans.push("   ".dim());
+            spans.push(Span::styled("   ", muted));
             spans.push(CHANGE_MODEL_HINT_COMMAND.cyan());
-            spans.push(CHANGE_MODEL_HINT_EXPLANATION.dim());
+            spans.push(Span::styled(CHANGE_MODEL_HINT_EXPLANATION, muted));
             spans
         };
 
@@ -385,7 +398,10 @@ impl HistoryCell for SessionHeaderHistoryCell {
         let dir_prefix_width = UnicodeWidthStr::width(dir_prefix.as_str());
         let dir_max_width = inner_width.saturating_sub(dir_prefix_width);
         let dir = self.format_directory(Some(dir_max_width));
-        let dir_spans = vec![Span::from(dir_prefix).dim(), Span::from(dir)];
+        let dir_spans = vec![
+            Span::styled(dir_prefix, muted),
+            Span::styled(dir, metadata_style()),
+        ];
 
         let mut lines = vec![
             make_row(title_spans),
@@ -397,7 +413,7 @@ impl HistoryCell for SessionHeaderHistoryCell {
         if self.yolo_mode {
             let permissions_label = format!("{PERMISSIONS_LABEL:<label_width$}");
             lines.push(make_row(vec![
-                Span::from(format!("{permissions_label} ")).dim(),
+                Span::styled(format!("{permissions_label} "), muted),
                 "YOLO mode".magenta().bold(),
             ]));
         }

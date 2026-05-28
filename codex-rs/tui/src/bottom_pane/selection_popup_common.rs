@@ -15,7 +15,8 @@ use crate::key_hint::KeyBinding;
 use crate::line_truncation::truncate_line_with_ellipsis_if_overflow;
 use crate::render::Insets;
 use crate::render::RectExt as _;
-use crate::style::accent_style;
+use crate::style::muted_style;
+use crate::style::selection_style;
 use crate::style::user_message_style;
 
 use super::scroll_state::ScrollState;
@@ -171,7 +172,7 @@ fn compute_desc_col(
                         let mut spans = row.name_prefix_spans.clone();
                         spans.push(row.name.clone().into());
                         if row.disabled_reason.is_some() {
-                            spans.push(" (disabled)".dim());
+                            spans.push(Span::styled(" (disabled)", muted_style()));
                         }
                         Line::from(spans).width()
                     })
@@ -183,7 +184,7 @@ fn compute_desc_col(
                         let mut spans = row.name_prefix_spans.clone();
                         spans.push(row.name.clone().into());
                         if row.disabled_reason.is_some() {
-                            spans.push(" (disabled)".dim());
+                            spans.push(Span::styled(" (disabled)", muted_style()));
                         }
                         Line::from(spans).width()
                     })
@@ -278,7 +279,7 @@ fn wrap_two_column_row(row: &GenericDisplayRow, desc_col: usize, width: u16) -> 
             if gap > 0 {
                 spans.push(" ".repeat(gap).into());
             }
-            spans.push(desc.to_string().dim());
+            spans.push(Span::styled(desc.to_string(), muted_style()));
         }
 
         out.push(Line::from(spans));
@@ -317,14 +318,14 @@ fn apply_row_state_style(lines: &mut [Line<'static>], selected: bool, is_disable
     if selected {
         for line in lines.iter_mut() {
             line.spans.iter_mut().for_each(|span| {
-                span.style = accent_style();
+                span.style = selection_style();
             });
         }
     }
     if is_disabled {
         for line in lines.iter_mut() {
             line.spans.iter_mut().for_each(|span| {
-                span.style = span.style.dim();
+                span.style = span.style.patch(muted_style());
             });
         }
     }
@@ -485,7 +486,7 @@ fn build_full_line(row: &GenericDisplayRow, desc_col: usize) -> Line<'static> {
     }
 
     if row.disabled_reason.is_some() {
-        name_spans.push(" (disabled)".dim());
+        name_spans.push(Span::styled(" (disabled)", muted_style()));
     }
 
     let this_name_width = name_prefix_width + Line::from(name_spans.clone()).width();
@@ -501,11 +502,11 @@ fn build_full_line(row: &GenericDisplayRow, desc_col: usize) -> Line<'static> {
         if gap > 0 {
             full_spans.push(" ".repeat(gap).into());
         }
-        full_spans.push(desc.clone().dim());
+        full_spans.push(Span::styled(desc.clone(), muted_style()));
     }
     if let Some(tag) = row.category_tag.as_deref().filter(|tag| !tag.is_empty()) {
         full_spans.push("  ".into());
-        full_spans.push(tag.to_string().dim());
+        full_spans.push(Span::styled(tag.to_string(), muted_style()));
     }
     Line::from(full_spans)
 }
@@ -525,7 +526,7 @@ fn render_rows_inner(
 ) -> u16 {
     if rows_all.is_empty() {
         if area.height > 0 {
-            Line::from(empty_message.dim().italic()).render(area, buf);
+            Line::from(Span::styled(empty_message, muted_style().italic())).render(area, buf);
         }
         // Count the placeholder line only when there is vertical space to draw it.
         return u16::from(area.height > 0);
@@ -685,7 +686,7 @@ pub(crate) fn render_rows_single_line_with_col_width_mode(
 ) -> u16 {
     if rows_all.is_empty() {
         if area.height > 0 {
-            Line::from(empty_message.dim().italic()).render(area, buf);
+            Line::from(Span::styled(empty_message, muted_style().italic())).render(area, buf);
         }
         // Count the placeholder line only when there is vertical space to draw it.
         return u16::from(area.height > 0);
@@ -724,12 +725,12 @@ pub(crate) fn render_rows_single_line_with_col_width_mode(
         let mut full_line = build_full_line(row, desc_col);
         if Some(i) == state.selected_idx && !row.is_disabled {
             full_line.spans.iter_mut().for_each(|span| {
-                span.style = accent_style();
+                span.style = selection_style();
             });
         }
         if row.is_disabled {
             full_line.spans.iter_mut().for_each(|span| {
-                span.style = span.style.dim();
+                span.style = span.style.patch(muted_style());
             });
         }
 
@@ -856,7 +857,7 @@ mod tests {
     }
 
     #[test]
-    fn selected_rows_use_the_shared_accent_style() {
+    fn selected_rows_use_the_shared_selection_style() {
         let rows = vec![GenericDisplayRow {
             name: "selected".to_string(),
             ..Default::default()
@@ -873,7 +874,7 @@ mod tests {
         );
 
         let style = buf[(0, 0)].style();
-        let expected = accent_style();
+        let expected = selection_style();
         assert_eq!(style.fg, expected.fg);
         assert!(style.add_modifier.contains(Modifier::BOLD));
     }

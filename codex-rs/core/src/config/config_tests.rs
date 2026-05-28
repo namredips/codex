@@ -56,6 +56,8 @@ use codex_config::types::SkillsConfig;
 use codex_config::types::ToolSuggestDisabledTool;
 use codex_config::types::ToolSuggestDiscoverableType;
 use codex_config::types::Tui;
+use codex_config::types::TuiColor;
+use codex_config::types::TuiColors;
 use codex_config::types::TuiKeymap;
 use codex_config::types::TuiNotificationSettings;
 use codex_config::types::TuiPetAnchor;
@@ -566,6 +568,7 @@ fn config_toml_deserializes_model_availability_nux() {
             alternate_screen: AltScreenMode::default(),
             status_line: None,
             status_line_use_colors: true,
+            colors: TuiColors::default(),
             terminal_title: None,
             theme: None,
             pet: None,
@@ -581,6 +584,74 @@ fn config_toml_deserializes_model_availability_nux() {
             terminal_resize_reflow_max_rows: None,
         }
     );
+}
+
+#[test]
+fn config_toml_deserializes_tui_colors() {
+    let toml = r##"
+[tui.colors]
+foreground = "#E6EDF3"
+muted = "#808080"
+accent = "#58A6FF"
+success = "#3FB950"
+warning = "#D29922"
+error = "#F85149"
+status = "#79C0FF"
+border = "#30363D"
+separator = "#404040"
+user_message_bg = "#1F1F1F"
+composer_bg = "#202020"
+proposed_plan_bg = "#222222"
+selection_fg = "#FFFFFF"
+selection_bg = "#264F78"
+"##;
+    let cfg: ConfigToml =
+        toml::from_str(toml).expect("TOML deserialization should succeed for TUI colors");
+    let colors = cfg.tui.expect("tui config should deserialize").colors;
+
+    assert_eq!(
+        colors,
+        TuiColors {
+            foreground: Some(TuiColor::new(230, 237, 243)),
+            muted: Some(TuiColor::new(128, 128, 128)),
+            accent: Some(TuiColor::new(88, 166, 255)),
+            success: Some(TuiColor::new(63, 185, 80)),
+            warning: Some(TuiColor::new(210, 153, 34)),
+            error: Some(TuiColor::new(248, 81, 73)),
+            status: Some(TuiColor::new(121, 192, 255)),
+            border: Some(TuiColor::new(48, 54, 61)),
+            separator: Some(TuiColor::new(64, 64, 64)),
+            user_message_bg: Some(TuiColor::new(31, 31, 31)),
+            composer_bg: Some(TuiColor::new(32, 32, 32)),
+            proposed_plan_bg: Some(TuiColor::new(34, 34, 34)),
+            selection_fg: Some(TuiColor::new(255, 255, 255)),
+            selection_bg: Some(TuiColor::new(38, 79, 120)),
+        }
+    );
+}
+
+#[test]
+fn config_toml_rejects_invalid_tui_color() {
+    let toml = r##"
+[tui.colors]
+muted = "808080"
+"##;
+    let err = toml::from_str::<ConfigToml>(toml)
+        .expect_err("invalid semantic color should be rejected");
+
+    assert!(err.to_string().contains("expected #RRGGBB color"));
+}
+
+#[test]
+fn config_toml_rejects_unknown_tui_color_slot() {
+    let toml = r##"
+[tui.colors]
+not_a_slot = "#808080"
+"##;
+    let err =
+        toml::from_str::<ConfigToml>(toml).expect_err("unknown semantic color should be rejected");
+
+    assert!(err.to_string().contains("unknown field"));
 }
 
 #[test]
@@ -3105,6 +3176,36 @@ fn tui_theme_defaults_to_none() {
     assert_eq!(parsed.tui.as_ref().and_then(|t| t.theme.as_deref()), None);
 }
 
+#[tokio::test]
+async fn runtime_config_resolves_tui_colors() {
+    let config = Config::load_from_base_config_with_overrides(
+        ConfigToml {
+            tui: Some(Tui {
+                colors: TuiColors {
+                    muted: Some(TuiColor::new(128, 128, 128)),
+                    composer_bg: Some(TuiColor::new(31, 31, 31)),
+                    ..Default::default()
+                },
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+        ConfigOverrides::default(),
+        tempdir().expect("tempdir").abs(),
+    )
+    .await
+    .expect("load config");
+
+    assert_eq!(
+        config.tui_colors,
+        TuiColors {
+            muted: Some(TuiColor::new(128, 128, 128)),
+            composer_bg: Some(TuiColor::new(31, 31, 31)),
+            ..Default::default()
+        }
+    );
+}
+
 #[test]
 fn tui_session_picker_view_deserializes_from_toml() {
     let cfg = r#"
@@ -3214,6 +3315,7 @@ fn tui_config_missing_notifications_field_defaults_to_enabled() {
             alternate_screen: AltScreenMode::Auto,
             status_line: None,
             status_line_use_colors: true,
+            colors: TuiColors::default(),
             terminal_title: None,
             theme: None,
             pet: None,

@@ -39,18 +39,21 @@ impl HistoryCell for FinalMessageSeparator {
         }
 
         if label_parts.is_empty() {
-            return vec![Line::from_iter(["─".repeat(width as usize).dim()])];
+            return vec![Line::from_iter([Span::styled(
+                "─".repeat(width as usize),
+                separator_style(),
+            )])];
         }
 
         let label = format!("─ {} ─", label_parts.join(" • "));
         let (label, _suffix, label_width) = take_prefix_by_width(&label, width as usize);
-        vec![
-            Line::from_iter([
-                label,
+        vec![Line::from_iter([
+            Span::styled(label, separator_style()),
+            Span::styled(
                 "─".repeat((width as usize).saturating_sub(label_width)),
-            ])
-            .dim(),
-        ]
+                separator_style(),
+            ),
+        ])]
     }
 
     fn raw_lines(&self) -> Vec<Line<'static>> {

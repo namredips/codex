@@ -121,14 +121,14 @@ impl HistoryCell for McpToolCallCell {
         let mut lines: Vec<Line<'static>> = Vec::new();
         let status = self.success();
         let bullet = match status {
-            Some(true) => "•".green().bold(),
-            Some(false) => "•".red().bold(),
+            Some(true) => Span::styled("•", success_style().add_modifier(Modifier::BOLD)),
+            Some(false) => Span::styled("•", error_style().add_modifier(Modifier::BOLD)),
             None => activity_indicator(
                 Some(self.start_time),
                 MotionMode::from_animations_enabled(self.animations_enabled),
                 ReducedMotionIndicator::StaticBullet,
             )
-            .unwrap_or_else(|| "•".dim()),
+            .unwrap_or_else(|| Span::styled("•", muted_style())),
         };
         let header_text = if status.is_some() {
             "Called"
@@ -156,7 +156,11 @@ impl HistoryCell for McpToolCallCell {
                 .subsequent_indent("    ".into());
             let wrapped = adaptive_wrap_line(&invocation_line, opts);
             let body_lines: Vec<Line<'static>> = wrapped.iter().map(line_to_static).collect();
-            lines.extend(prefix_lines(body_lines, "  └ ".dim(), "    ".into()));
+            lines.extend(prefix_lines(
+                body_lines,
+                Span::styled("  └ ", muted_style()),
+                "    ".into(),
+            ));
         }
 
         let mut detail_lines: Vec<Line<'static>> = Vec::new();
@@ -170,7 +174,10 @@ impl HistoryCell for McpToolCallCell {
                         for block in content {
                             let text = Self::render_content_block(block, detail_wrap_width);
                             for segment in text.split('\n') {
-                                let line = Line::from(segment.to_string().dim());
+                                let line = Line::from(Span::styled(
+                                    segment.to_string(),
+                                    muted_style(),
+                                ));
                                 let wrapped = adaptive_wrap_line(
                                     &line,
                                     RtOptions::new(detail_wrap_width)
@@ -188,7 +195,7 @@ impl HistoryCell for McpToolCallCell {
                         TOOL_CALL_MAX_LINES,
                         width as usize,
                     );
-                    let err_line = Line::from(err_text.dim());
+                    let err_line = Line::from(Span::styled(err_text, muted_style()));
                     let wrapped = adaptive_wrap_line(
                         &err_line,
                         RtOptions::new(detail_wrap_width)
@@ -202,7 +209,7 @@ impl HistoryCell for McpToolCallCell {
 
         if !detail_lines.is_empty() {
             let initial_prefix: Span<'static> = if inline_invocation {
-                "  └ ".dim()
+                Span::styled("  └ ", muted_style())
             } else {
                 "    ".into()
             };
@@ -332,7 +339,7 @@ pub(crate) fn empty_mcp_output() -> PlainHistoryCell {
             .underlined(),
             " to configure them.".into(),
         ])
-        .style(Style::default().add_modifier(Modifier::DIM)),
+        .style(muted_style()),
     ];
 
     PlainHistoryCell::new(lines)
@@ -382,7 +389,7 @@ pub(crate) fn new_mcp_tools_output(
             header.push("(disabled)".red());
             lines.push(header.into());
             if let Some(reason) = cfg.disabled_reason.as_ref().map(ToString::to_string) {
-                lines.push(vec!["    • Reason: ".into(), reason.dim()].into());
+                lines.push(vec!["    • Reason: ".into(), Span::styled(reason, muted_style())].into());
             }
             lines.push(Line::from(""));
             continue;
@@ -477,7 +484,7 @@ pub(crate) fn new_mcp_tools_output(
                 let label = resource.title.as_ref().unwrap_or(&resource.name);
                 spans.push(label.clone().into());
                 spans.push(" ".into());
-                spans.push(format!("({})", resource.uri).dim());
+                spans.push(Span::styled(format!("({})", resource.uri), muted_style()));
             }
 
             lines.push(spans.into());
@@ -500,7 +507,10 @@ pub(crate) fn new_mcp_tools_output(
                 let label = template.title.as_ref().unwrap_or(&template.name);
                 spans.push(label.clone().into());
                 spans.push(" ".into());
-                spans.push(format!("({})", template.uri_template).dim());
+                spans.push(Span::styled(
+                    format!("({})", template.uri_template),
+                    muted_style(),
+                ));
             }
 
             lines.push(spans.into());
@@ -582,7 +592,7 @@ pub(crate) fn new_mcp_tools_output_from_statuses(
                     let label = resource.title.as_ref().unwrap_or(&resource.name);
                     spans.push(label.clone().into());
                     spans.push(" ".into());
-                    spans.push(format!("({})", resource.uri).dim());
+                    spans.push(Span::styled(format!("({})", resource.uri), muted_style()));
                 }
 
                 lines.push(spans.into());
@@ -602,7 +612,10 @@ pub(crate) fn new_mcp_tools_output_from_statuses(
                     let label = template.title.as_ref().unwrap_or(&template.name);
                     spans.push(label.clone().into());
                     spans.push(" ".into());
-                    spans.push(format!("({})", template.uri_template).dim());
+                    spans.push(Span::styled(
+                        format!("({})", template.uri_template),
+                        muted_style(),
+                    ));
                 }
 
                 lines.push(spans.into());
@@ -645,10 +658,10 @@ impl HistoryCell for McpInventoryLoadingCell {
                     MotionMode::from_animations_enabled(self.animations_enabled),
                     ReducedMotionIndicator::StaticBullet,
                 )
-                .unwrap_or_else(|| "•".dim()),
+                .unwrap_or_else(|| Span::styled("•", muted_style())),
                 " ".into(),
                 "Loading MCP inventory".bold(),
-                "…".dim(),
+                Span::styled("…", muted_style()),
             ]
             .into(),
         ]
@@ -685,7 +698,7 @@ fn format_mcp_invocation<'a>(invocation: McpInvocation) -> Line<'a> {
         ".".into(),
         invocation.tool.cyan(),
         "(".into(),
-        args_str.dim(),
+        Span::styled(args_str, muted_style()),
         ")".into(),
     ];
     invocation_spans.into()

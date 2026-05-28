@@ -8,6 +8,9 @@ use ratatui::text::Span;
 
 use super::status_line_setup::StatusLineItem;
 use crate::render::highlight::foreground_style_for_scopes;
+use crate::style::muted_style;
+use crate::style::separator_style;
+use crate::style::status_style;
 
 const STATUS_LINE_SEPARATOR: &str = " · ";
 const STATUS_LINE_COLOR_SATURATION_PERCENT: u16 = 85;
@@ -100,15 +103,17 @@ where
     let mut spans = Vec::new();
     for (item, text) in segments {
         if !spans.is_empty() {
-            spans.push(STATUS_LINE_SEPARATOR.dim());
+            spans.push(Span::styled(STATUS_LINE_SEPARATOR, separator_style()));
         }
-        let style = if use_theme_colors {
+        let style = if let Some(style) = status_style() {
+            style
+        } else if use_theme_colors {
             let accent = StatusLineAccent::for_item(item);
             soften_status_line_style(
                 theme_style_for_accent(accent).unwrap_or_else(|| accent.fallback_style()),
             )
         } else {
-            Style::default().dim()
+            muted_style()
         };
         let style = if item == StatusLineItem::PullRequestNumber {
             style.underlined()

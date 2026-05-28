@@ -49,6 +49,7 @@ use codex_config::types::SessionPickerViewMode;
 use codex_config::types::ToolSuggestConfig;
 use codex_config::types::ToolSuggestDisabledTool;
 use codex_config::types::ToolSuggestDiscoverable;
+use codex_config::types::TuiColors;
 use codex_config::types::TuiKeymap;
 use codex_config::types::TuiNotificationSettings;
 use codex_config::types::TuiPetAnchor;
@@ -697,6 +698,9 @@ pub struct Config {
 
     /// Whether to color status line items with colors from the active syntax theme.
     pub tui_status_line_use_colors: bool,
+
+    /// Optional semantic colors for non-syntax TUI surfaces.
+    pub tui_colors: TuiColors,
 
     /// Ordered list of terminal title item identifiers for the TUI.
     ///
@@ -3502,6 +3506,11 @@ impl Config {
                 .as_ref()
                 .map(|t| t.status_line_use_colors)
                 .unwrap_or(true),
+            tui_colors: cfg
+                .tui
+                .as_ref()
+                .map(|t| t.colors.clone())
+                .unwrap_or_default(),
             tui_terminal_title: cfg.tui.as_ref().and_then(|t| t.terminal_title.clone()),
             tui_theme: cfg.tui.as_ref().and_then(|t| t.theme.clone()),
             tui_pet: cfg.tui.as_ref().and_then(|t| t.pet.clone()),

@@ -1,5 +1,7 @@
 use crate::render::renderable::Renderable;
 use crate::render::renderable::RowRenderable;
+use crate::style::muted_style;
+use crate::style::selection_style;
 use ratatui::style::Style;
 use ratatui::style::Styled as _;
 use ratatui::style::Stylize as _;
@@ -27,9 +29,9 @@ pub(crate) fn selection_option_row_with_dim(
         format!("  {}. ", index + 1)
     };
     let style = if is_selected {
-        Style::default().cyan()
+        selection_style()
     } else if dim {
-        Style::default().dim()
+        muted_style()
     } else {
         Style::default()
     };
