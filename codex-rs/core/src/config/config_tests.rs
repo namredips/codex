@@ -636,8 +636,8 @@ fn config_toml_rejects_invalid_tui_color() {
 [tui.colors]
 muted = "808080"
 "##;
-    let err = toml::from_str::<ConfigToml>(toml)
-        .expect_err("invalid semantic color should be rejected");
+    let err =
+        toml::from_str::<ConfigToml>(toml).expect_err("invalid semantic color should be rejected");
 
     assert!(err.to_string().contains("expected #RRGGBB color"));
 }

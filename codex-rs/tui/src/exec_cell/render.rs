@@ -325,18 +325,15 @@ impl ExecCell {
                     .map(|name| Span::styled(name, metadata_style()));
                 vec![(
                     "Read",
-                    Itertools::intersperse(
-                        names,
-                        Span::styled(", ", muted_style()),
-                    )
-                    .collect(),
+                    Itertools::intersperse(names, Span::styled(", ", muted_style())).collect(),
                 )]
             } else {
                 let mut lines = Vec::new();
                 for parsed in &call.parsed {
                     match parsed {
                         ParsedCommand::Read { name, .. } => {
-                            lines.push(("Read", vec![Span::styled(name.clone(), metadata_style())]));
+                            lines
+                                .push(("Read", vec![Span::styled(name.clone(), metadata_style())]));
                         }
                         ParsedCommand::ListFiles { cmd, path } => {
                             lines.push((

@@ -2731,127 +2731,6 @@
       ],
       "type": "string"
     },
-    "TuiColor": {
-      "type": "string"
-    },
-    "TuiColors": {
-      "additionalProperties": false,
-      "properties": {
-        "accent": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "border": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "composer_bg": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "error": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "foreground": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "muted": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "proposed_plan_bg": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "selection_bg": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "selection_fg": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "separator": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "status": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "success": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "user_message_bg": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        },
-        "warning": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/TuiColor"
-            }
-          ],
-          "default": null
-        }
-      },
-      "type": "object"
-    },
     "Tui": {
       "additionalProperties": false,
       "description": "Collection of settings that are specific to the TUI.",
@@ -2876,7 +2755,22 @@
               "$ref": "#/definitions/TuiColors"
             }
           ],
-          "default": {},
+          "default": {
+            "accent": null,
+            "border": null,
+            "composer_bg": null,
+            "error": null,
+            "foreground": null,
+            "muted": null,
+            "proposed_plan_bg": null,
+            "selection_bg": null,
+            "selection_fg": null,
+            "separator": null,
+            "status": null,
+            "success": null,
+            "user_message_bg": null,
+            "warning": null
+          },
           "description": "Optional semantic colors for non-syntax TUI surfaces."
         },
         "keymap": {
@@ -3236,6 +3130,129 @@
             }
           ],
           "description": "Interrupt the active turn."
+        }
+      },
+      "type": "object"
+    },
+    "TuiColor": {
+      "description": "Hex RGB color in #RRGGBB format.",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "type": "string"
+    },
+    "TuiColors": {
+      "additionalProperties": false,
+      "properties": {
+        "accent": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "border": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "composer_bg": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "error": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "foreground": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "muted": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "proposed_plan_bg": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "selection_bg": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "selection_fg": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "separator": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "status": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "success": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "user_message_bg": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
+        },
+        "warning": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/TuiColor"
+            }
+          ],
+          "default": null
         }
       },
       "type": "object"

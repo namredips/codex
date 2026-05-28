@@ -841,7 +841,6 @@ mod tests {
     use pretty_assertions::assert_eq;
     use ratatui::buffer::Buffer;
     use ratatui::layout::Rect;
-    use ratatui::style::Modifier;
 
     #[test]
     fn one_cell_width_falls_back_without_panic_for_wrapped_two_column_rows() {
@@ -876,6 +875,6 @@ mod tests {
         let style = buf[(0, 0)].style();
         let expected = selection_style();
         assert_eq!(style.fg, expected.fg);
-        assert!(style.add_modifier.contains(Modifier::BOLD));
+        assert_eq!(style.add_modifier, expected.add_modifier);
     }
 }

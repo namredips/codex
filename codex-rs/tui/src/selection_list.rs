@@ -4,7 +4,6 @@ use crate::style::muted_style;
 use crate::style::selection_style;
 use ratatui::style::Style;
 use ratatui::style::Styled as _;
-use ratatui::style::Stylize as _;
 use ratatui::widgets::Paragraph;
 use ratatui::widgets::Wrap;
 use unicode_width::UnicodeWidthStr;

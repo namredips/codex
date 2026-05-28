@@ -49,11 +49,13 @@ fn with_border_internal(
     let mut out = Vec::with_capacity(lines.len() + 2);
     let border_inner_width = content_width + 2;
     let border = border_style();
-    out.push(vec![Span::styled(
-        format!("╭{}╮", "─".repeat(border_inner_width)),
-        border,
-    )]
-    .into());
+    out.push(
+        vec![Span::styled(
+            format!("╭{}╮", "─".repeat(border_inner_width)),
+            border,
+        )]
+        .into(),
+    );
 
     for line in lines.into_iter() {
         let used_width: usize = line
@@ -71,11 +73,13 @@ fn with_border_internal(
         out.push(Line::from(spans));
     }
 
-    out.push(vec![Span::styled(
-        format!("╰{}╯", "─".repeat(border_inner_width)),
-        border,
-    )]
-    .into());
+    out.push(
+        vec![Span::styled(
+            format!("╰{}╯", "─".repeat(border_inner_width)),
+            border,
+        )]
+        .into(),
+    );
 
     out
 }
@@ -182,7 +186,10 @@ pub(crate) fn new_session_info(
             Line::from(vec![
                 "  ".into(),
                 "/init".into(),
-                Span::styled(" - create an AGENTS.md file with instructions for Codex", muted),
+                Span::styled(
+                    " - create an AGENTS.md file with instructions for Codex",
+                    muted,
+                ),
             ]),
             Line::from(vec![
                 "  ".into(),

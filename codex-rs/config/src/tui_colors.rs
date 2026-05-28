@@ -1,4 +1,10 @@
 use schemars::JsonSchema;
+use schemars::r#gen::SchemaGenerator;
+use schemars::schema::InstanceType;
+use schemars::schema::Metadata;
+use schemars::schema::Schema;
+use schemars::schema::SchemaObject;
+use schemars::schema::StringValidation;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -36,9 +42,8 @@ pub struct TuiColors {
     pub selection_bg: Option<TuiColor>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 #[serde(try_from = "String", into = "String")]
-#[schemars(with = "String")]
 pub struct TuiColor {
     r: u8,
     g: u8,
@@ -88,5 +93,26 @@ impl From<TuiColor> for String {
     fn from(value: TuiColor) -> Self {
         let (r, g, b) = value.rgb();
         format!("#{r:02X}{g:02X}{b:02X}")
+    }
+}
+
+impl JsonSchema for TuiColor {
+    fn schema_name() -> String {
+        "TuiColor".to_string()
+    }
+
+    fn json_schema(_generator: &mut SchemaGenerator) -> Schema {
+        Schema::Object(SchemaObject {
+            instance_type: Some(InstanceType::String.into()),
+            metadata: Some(Box::new(Metadata {
+                description: Some("Hex RGB color in #RRGGBB format.".to_string()),
+                ..Default::default()
+            })),
+            string: Some(Box::new(StringValidation {
+                pattern: Some("^#[0-9A-Fa-f]{6}$".to_string()),
+                ..Default::default()
+            })),
+            ..Default::default()
+        })
     }
 }

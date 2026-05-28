@@ -91,16 +91,8 @@ pub(crate) fn accent_style() -> Style {
     accent_style_for_colors(default_bg(), &current_tui_colors())
 }
 
-/// Returns the style for a user-authored message using the provided terminal background.
-pub fn user_message_style_for(terminal_bg: Option<(u8, u8, u8)>) -> Style {
-    user_message_style_for_colors(terminal_bg, &TuiColors::default())
-}
-
-pub fn proposed_plan_style_for(terminal_bg: Option<(u8, u8, u8)>) -> Style {
-    proposed_plan_style_for_colors(terminal_bg, &TuiColors::default())
-}
-
 /// Returns the shared accent style for the provided terminal background.
+#[cfg(test)]
 pub(crate) fn accent_style_for(terminal_bg: Option<(u8, u8, u8)>) -> Style {
     accent_style_for_colors(terminal_bg, &TuiColors::default())
 }
@@ -114,21 +106,22 @@ fn current_tui_colors() -> TuiColors {
 }
 
 fn foreground_style_for_colors(colors: &TuiColors) -> Style {
-    colors
-        .foreground
-        .map_or_else(Style::default, |color| Style::default().fg(tui_color(color)))
+    colors.foreground.map_or_else(Style::default, |color| {
+        Style::default().fg(tui_color(color))
+    })
 }
 
 fn muted_style_for_colors(colors: &TuiColors) -> Style {
-    colors
-        .muted
-        .map_or_else(|| Style::default().dim(), |color| Style::default().fg(tui_color(color)))
+    colors.muted.map_or_else(
+        || Style::default().dim(),
+        |color| Style::default().fg(tui_color(color)),
+    )
 }
 
 fn metadata_style_for_colors(colors: &TuiColors) -> Style {
-    colors
-        .muted
-        .map_or_else(Style::default, |color| Style::default().fg(tui_color(color)))
+    colors.muted.map_or_else(Style::default, |color| {
+        Style::default().fg(tui_color(color))
+    })
 }
 
 fn border_style_for_colors(colors: &TuiColors) -> Style {
@@ -152,19 +145,24 @@ fn status_style_for_colors(colors: &TuiColors) -> Option<Style> {
 }
 
 fn success_style_for_colors(colors: &TuiColors) -> Style {
-    colors
-        .success
-        .map_or_else(|| Style::default().green(), |color| Style::default().fg(tui_color(color)))
+    colors.success.map_or_else(
+        || Style::default().green(),
+        |color| Style::default().fg(tui_color(color)),
+    )
 }
 
 fn error_style_for_colors(colors: &TuiColors) -> Style {
-    colors
-        .error
-        .map_or_else(|| Style::default().red(), |color| Style::default().fg(tui_color(color)))
+    colors.error.map_or_else(
+        || Style::default().red(),
+        |color| Style::default().fg(tui_color(color)),
+    )
 }
 
-fn selection_style_for_colors(terminal_bg: Option<(u8, u8, u8)>, colors: &TuiColors) -> Style {
-    let mut style = accent_style_for_colors(terminal_bg, colors);
+fn selection_style_for_colors(_terminal_bg: Option<(u8, u8, u8)>, colors: &TuiColors) -> Style {
+    let mut style = Style::default().fg(match colors.accent {
+        Some(color) => tui_color(color),
+        None => Color::Cyan,
+    });
     if let Some(fg) = colors.selection_fg {
         style = style.fg(tui_color(fg));
     }
@@ -174,10 +172,7 @@ fn selection_style_for_colors(terminal_bg: Option<(u8, u8, u8)>, colors: &TuiCol
     style
 }
 
-fn user_message_style_for_colors(
-    terminal_bg: Option<(u8, u8, u8)>,
-    colors: &TuiColors,
-) -> Style {
+fn user_message_style_for_colors(terminal_bg: Option<(u8, u8, u8)>, colors: &TuiColors) -> Style {
     surface_style_for_colors(
         foreground_style_for_colors(colors),
         colors.user_message_bg,
@@ -193,10 +188,7 @@ fn composer_style_for_colors(terminal_bg: Option<(u8, u8, u8)>, colors: &TuiColo
     )
 }
 
-fn proposed_plan_style_for_colors(
-    terminal_bg: Option<(u8, u8, u8)>,
-    colors: &TuiColors,
-) -> Style {
+fn proposed_plan_style_for_colors(terminal_bg: Option<(u8, u8, u8)>, colors: &TuiColors) -> Style {
     surface_style_for_colors(
         foreground_style_for_colors(colors),
         colors.proposed_plan_bg,
@@ -395,7 +387,19 @@ mod tests {
             Style::default()
                 .fg(best_color((255, 255, 255)))
                 .bg(best_color((38, 79, 120)))
-                .bold()
+        );
+    }
+
+    #[test]
+    fn selection_style_preserves_existing_non_bold_default() {
+        assert_eq!(
+            selection_style_for_colors(Some((0, 0, 0)), &TuiColors::default()),
+            Style::default().fg(Color::Cyan)
+        );
+
+        assert_eq!(
+            selection_style_for_colors(Some((255, 255, 255)), &TuiColors::default()),
+            Style::default().fg(Color::Cyan)
         );
     }
 

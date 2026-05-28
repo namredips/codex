@@ -174,10 +174,8 @@ impl HistoryCell for McpToolCallCell {
                         for block in content {
                             let text = Self::render_content_block(block, detail_wrap_width);
                             for segment in text.split('\n') {
-                                let line = Line::from(Span::styled(
-                                    segment.to_string(),
-                                    muted_style(),
-                                ));
+                                let line =
+                                    Line::from(Span::styled(segment.to_string(), muted_style()));
                                 let wrapped = adaptive_wrap_line(
                                     &line,
                                     RtOptions::new(detail_wrap_width)
@@ -389,7 +387,9 @@ pub(crate) fn new_mcp_tools_output(
             header.push("(disabled)".red());
             lines.push(header.into());
             if let Some(reason) = cfg.disabled_reason.as_ref().map(ToString::to_string) {
-                lines.push(vec!["    • Reason: ".into(), Span::styled(reason, muted_style())].into());
+                lines.push(
+                    vec!["    • Reason: ".into(), Span::styled(reason, muted_style())].into(),
+                );
             }
             lines.push(Line::from(""));
             continue;
