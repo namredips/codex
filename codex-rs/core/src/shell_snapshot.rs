@@ -9,7 +9,6 @@ use crate::StateDbHandle;
 use crate::rollout::list::find_thread_path_by_id_str;
 use crate::shell::Shell;
 use crate::shell::ShellType;
-use crate::shell::get_shell;
 use anyhow::Context;
 use anyhow::Result;
 use anyhow::anyhow;
@@ -151,9 +150,7 @@ impl ShellSnapshot {
         });
 
         // Make the new snapshot.
-        if let Err(err) =
-            write_shell_snapshot(shell.shell_type.clone(), &temp_path, session_cwd).await
-        {
+        if let Err(err) = write_shell_snapshot(shell, &temp_path, session_cwd).await {
             tracing::warn!(
                 "Failed to create shell snapshot for {}: {err:?}",
                 shell.name()
@@ -196,17 +193,18 @@ impl Drop for ShellSnapshot {
 }
 
 async fn write_shell_snapshot(
-    shell_type: ShellType,
+    shell: &Shell,
     output_path: &AbsolutePathBuf,
     cwd: &AbsolutePathBuf,
 ) -> Result<()> {
-    if shell_type == ShellType::PowerShell || shell_type == ShellType::Cmd {
-        bail!("Shell snapshot not supported yet for {shell_type:?}");
+    if matches!(&shell.shell_type, ShellType::PowerShell | ShellType::Cmd) {
+        bail!(
+            "Shell snapshot not supported yet for {:?}",
+            &shell.shell_type
+        );
     }
-    let shell = get_shell(shell_type.clone(), /*path*/ None)
-        .with_context(|| format!("No available shell for {shell_type:?}"))?;
 
-    let raw_snapshot = capture_snapshot(&shell, cwd).await?;
+    let raw_snapshot = capture_snapshot(shell, cwd).await?;
     let snapshot = strip_snapshot_preamble(&raw_snapshot)?;
 
     if let Some(parent) = output_path.parent() {

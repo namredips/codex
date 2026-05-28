@@ -83,7 +83,8 @@ fn assert_posix_snapshot_sections(snapshot: &str) {
 async fn get_snapshot(shell_type: ShellType) -> Result<String> {
     let dir = tempdir()?;
     let path = dir.path().join("snapshot.sh");
-    write_shell_snapshot(shell_type, &path.abs(), &dir.path().abs()).await?;
+    let shell = crate::shell::get_shell(shell_type, None).expect("shell exists");
+    write_shell_snapshot(&shell, &path.abs(), &dir.path().abs()).await?;
     let content = fs::read_to_string(&path).await?;
     Ok(content)
 }
